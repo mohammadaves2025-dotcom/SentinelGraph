@@ -1,0 +1,33 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/genai": "^1.48.0",
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.14.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
+    "morgan": "^1.10.1",
+    "node-cache": "^5.1.2",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.4",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
