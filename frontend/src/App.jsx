@@ -118,6 +118,13 @@ function App() {
             onQuarantine={handleNodeQuarantine}
         />
         <ThreatLedger isOpen={isLedgerOpen} onClose={() => setIsLedgerOpen(false)} data={graphData} />
+            <footer className="bg-black text-gray-400 py-3">
+  <div className="text-center text-sm tracking-wide">
+    © {new Date().getFullYear()} — 
+    <span className="text-gray-400 font-sm"> SentinelGraph </span> | 
+    Securing Transactions with Intelligence
+  </div>
+</footer>
       </div>
     </>
   );
