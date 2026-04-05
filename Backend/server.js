@@ -7,19 +7,20 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';  
 import { startLivePulse } from './utils/cronEngine.js';
 import morgan from 'morgan'; 
-import helmet from 'helmet'; // 👈 Cleaned up imports
+import helmet from 'helmet'; 
 import rateLimit from 'express-rate-limit'; 
 
 const app = express();
+const isProduction = process.env.NODE_ENV === 'production';
 
 // --- 🛡️ THE ENTERPRISE SHIELD ---
-// 1. Helmet: Hides Express vulnerabilities from hackers
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: false, // Required if you're serving any frontend assets or specific scripts
+}));
 
-// 2. Rate Limiter: The Anti-DDOS Bouncer
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per window
+    windowMs: 15 * 60 * 1000, 
+    max: 100, 
     standardHeaders: true,
     legacyHeaders: false,
     message: {
@@ -29,13 +30,8 @@ const apiLimiter = rateLimit({
     }
 });
 
-// Apply the shield strictly to ALL /api/ routes!
 app.use('/api/', apiLimiter);
-// ---------------------------------
-
-// 3. GLOBAL LOGGING (Morgan)
 app.use(morgan('dev'));
-
 app.use(cors());
 app.use(express.json());
 
@@ -49,78 +45,64 @@ const io = new Server(httpServer, {
     cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
-// Listen for frontend connections
 io.on("connection", (socket) => {
-    console.log(`⚡ New Investigator connected to Live Stream: ${socket.id}`);
-    
+    console.log(`⚡ New Investigator connected: ${socket.id}`);
     socket.on("disconnect", () => {
         console.log(`💤 Investigator disconnected: ${socket.id}`);
     });
 });
 
-// We attach the 'io' instance to the Express app so our controllers can use it!
 app.set('socketio', io);
-// -----------------------
 
-
-//ROUTES
+// --- ROUTES ---
 app.use('/api/fraud', fraudRouter);
 
-// 1. The TG 4.x Auth Generator
 async function getTigerGraphToken() {
     try {
         console.log("🔑 Requesting Savanna JWT Token...");
         const response = await axios.post(`${TG_HOST}/gsql/v1/tokens`, {
             secret: TG_SECRET
         });
-        
-        if (!response.data.error) {
-            return response.data.token;
-        } else {
-            throw new Error(response.data.message);
-        }
+        if (!response.data.error) return response.data.token;
+        throw new Error(response.data.message);
     } catch (error) {
         console.error("❌ Auth Error:", error?.response?.data || error.message);
         return null;
     }
 }
 
-// 2. The Test Route
-app.get('/api/test-connection', async (req, res) => {
-    try {
-        const token = await getTigerGraphToken();
+// app.get('/api/test-connection', async (req, res) => {
+//     try {
+//         const token = await getTigerGraphToken();
+//         if (!token) return res.status(500).json({ error: "Could not generate TigerGraph Token." });
+
+//         const response = await axios.get(`${TG_HOST}/restpp/graph/${TG_GRAPH}/vertices/Account?limit=3`, {
+//             headers: { 'Authorization': `Bearer ${token}` }
+//         });
         
-        if (!token) {
-            return res.status(500).json({ error: "Could not generate TigerGraph Token." });
-        }
+//         res.json({
+//             message: "Success! The Ferrari is out of the garage.",
+//             nodes: response.data.results
+//         });
+//     } catch (error) {
+//         res.status(500).json({ error: "Failed to fetch data from the graph." });
+//     }
+// });
 
-        console.log("✅ Token generated! Pinging database...");
-
-        // Fetch 3 random accounts to prove the token works
-        const response = await axios.get(`${TG_HOST}/restpp/graph/${TG_GRAPH}/vertices/Account?limit=3`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        console.log("🎉 SUCCESS! Express is officially talking to TigerGraph.");
-        
-        res.json({
-            message: "Success! The Ferrari is out of the garage.",
-            nodes: response.data.results
-        });
-
-    } catch (error) {
-        console.error("❌ Database Query Error:", error?.response?.data || error.message);
-        res.status(500).json({ error: "Failed to fetch data from the graph." });
-    }
+// --- ROOT ROUTE (Fixes the "Cannot GET /" error) ---
+app.get("/", (req, res) => {
+  res.send("🟢 SentinelGraph Backend is Live on Vercel!");
 });
 
-// --- START AUTONOMOUS ENGINE ---
-startLivePulse(io);
-// -------------------------------
+// --- EXECUTION LOGIC ---
+// Only start Cron/Socket listeners if running locally
+if (!isProduction) {
+    startLivePulse(io);
+    const PORT = process.env.PORT || 5000;
+    httpServer.listen(PORT, () => {
+        console.log(`🚀 Local Dev Server: http://localhost:${PORT}`);
+    });
+}
 
-// Start the server using httpServer.listen
-httpServer.listen(5000, () => {
-    console.log(`🚀 SentinelGraph Backend & Live Stream running on http://localhost:5000`);
-});
+// 🚨 VERCEL REQUIREMENT: Export the app
+export default app;
