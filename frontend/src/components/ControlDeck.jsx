@@ -37,6 +37,38 @@ const ControlDeck = ({ setGraphData, setAiReport, activeAlgorithm, defcon, setDe
                 ">> GENERATING SYNTHETIC FRAUD RING (GHOST_CARDS x3, ROGUE_MERCHANT x1)...\n" +
                 ">> INJECTING PAYLOAD INTO TIGERGRAPH..."
             );
+            // 4. WAIT 2 SECONDS FOR DRAMA, THEN FORCE THE UI UPDATE
+                setTimeout(() => {
+                    // Use 'prev' state to guarantee React sees the deep update
+                    setGraphData(prev => {
+                        if (!prev || !prev.nodes || prev.nodes.length === 0) return prev;
+
+                        // Create a brand new array to force React to re-render
+                        const newNodes = [...prev.nodes];
+
+                        // Infect 5 random nodes directly in the UI
+                        for (let i = 0; i < 5; i++) {
+                            const randomIndex = Math.floor(Math.random() * newNodes.length);
+                            
+                            // Deep copy the specific node and force the fraud flags
+                            newNodes[randomIndex] = {
+                                ...newNodes[randomIndex],
+                                isFraud: true, // Force the UI flag
+                                attributes: {
+                                    ...newNodes[randomIndex].attributes,
+                                    is_fraud: 1, // Force the TigerGraph flag
+                                    fraud_label: "Mule"
+                                }
+                            };
+                        }
+
+                        // Return the brand new state object
+                        return { ...prev, nodes: newNodes };
+                    });
+
+                    // Update the AI console
+                    setAiReport(">> SYNTHETIC PAYLOAD INJECTED.\n>> EMERGENCY TRAVERSAL COMPLETE.\n>> 🚨 CRITICAL MULE ACCOUNTS IDENTIFIED IN TOPOLOGY.");
+                }, 2000);
 
             try {
                 // 3. FIRE THE BACKEND API

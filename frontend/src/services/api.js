@@ -13,7 +13,7 @@ const apiClient = axios.create({
 
 // --- THE COMMAND DICTIONARY ---
 
-export const executeScan = async (algorithm = 'tg_wcc_card') => {
+export const executeScan = async (algorithm = 'tg_wcc_account_with_weights') => {
     try {
         const response = await apiClient.get(`/fraud/execute/${algorithm}`);
         return response.data;
@@ -45,6 +45,6 @@ export const engageKillSwitch = async (nodeType, nodeId) => {
 
 // Note: PDF download is handled slightly differently in the browser (usually via window.open or an anchor tag),
 // but we store the URL generator here for clean architecture!
-export const getPdfDownloadUrl = (algorithm = 'tg_wcc_card') => {
+export const getPdfDownloadUrl = (algorithm = 'tg_wcc_account_with_weights') => {
     return `${API_URL}/api/fraud/download-report/${algorithm}`;
 };

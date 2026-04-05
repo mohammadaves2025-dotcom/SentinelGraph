@@ -37,7 +37,7 @@ const HUDPanel = ({ title, children, color = "cyan", defcon }) => {
 function App() {
   const [graphData, setGraphData] = useState(null);
   const [aiReport, setAiReport] = useState("");
-  const [activeAlgorithm, setActiveAlgorithm] = useState("tg_wcc_card");
+  const [activeAlgorithm, setActiveAlgorithm] = useState("tg_wcc_account_with_weights");
   const [selectedEntity, setSelectedEntity] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLedgerOpen, setIsLedgerOpen] = useState(false);

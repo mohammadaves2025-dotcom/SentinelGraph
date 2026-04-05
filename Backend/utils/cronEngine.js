@@ -11,7 +11,7 @@ export const startLivePulse = (io) => {
             console.log("🔍 [AUTONOMOUS PATROL] Scanning graph for anomalies...");
             
             // The server pings its own API endpoint to run the WCC algorithm
-            const response = await axios.get('http://localhost:5000/api/fraud/execute/tg_wcc_card');
+            axios.get('http://localhost:5000/api/fraud/execute/tg_wcc_account_with_weights');
 
             if (response.data.success) {
                 console.log("🚨 [CRON DETECTED FRAUD] Broadcasting live alert to WebSockets!");

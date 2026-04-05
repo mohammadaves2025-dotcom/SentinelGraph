@@ -1,6 +1,6 @@
 // backend/utils/pdfGenerator.js
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable"; // You MUST import autoTable directly
 
 export const generateFraudPDF = (algorithm, aiReport, cleanData) => {
     const doc = new jsPDF();
@@ -12,7 +12,7 @@ export const generateFraudPDF = (algorithm, aiReport, cleanData) => {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(22);
     doc.text("SENTINELGRAPH SECURITY REPORT", 15, 25);
-    
+
     // 2. Report Metadata
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
@@ -25,9 +25,9 @@ export const generateFraudPDF = (algorithm, aiReport, cleanData) => {
     doc.text("AI INVESTIGATOR SUMMARY", 15, 75);
     doc.setFontSize(11);
     doc.setFont("helvetica", "italic");
-    
+
     // Split text so it doesn't run off the page
-    const splitReport = doc.splitTextToSize(aiReport, 180);
+    const splitReport = doc.splitTextToSize(aiReport || "No AI report generated.", 180);
     doc.text(splitReport, 15, 82);
 
     // 4. Involved Nodes Table
@@ -35,18 +35,24 @@ export const generateFraudPDF = (algorithm, aiReport, cleanData) => {
     doc.setFontSize(14);
     doc.text("EVIDENCE LOG (INVOLVED NODES)", 15, 120);
 
-    const tableRows = cleanData.nodes.map(node => [
-        node.id, 
-        node.type, 
-        node["Start.@min_cc_id"] || "N/A"
+    // ✅ FIX 1: Safely grab nodes (in case it's empty)
+    const nodes = cleanData?.nodes || [];
+
+    // ✅ FIX 2: Name the variable tableData so autoTable can find it
+    const tableData = nodes.map(node => [
+        node.id || node.v_id || "Unknown",
+        node.type || node.v_type || "Entity",
+        node["Start.@min_cc_id"] || (node.attributes?.is_fraud === 1 ? "🚨 FRAUD" : "✅ CLEAR")
     ]);
 
-    doc.autoTable({
-        startY: 125,
-        head: [['Node ID', 'Type', 'Community ID']],
-        body: tableRows,
-        theme: 'striped',
-        headStyles: { fillColor: [51, 51, 51] }
+    // ✅ FIX 3: Start the table at Y=130 so it doesn't draw over your text!
+    autoTable(doc, {
+        startY: 130, 
+        head: [['Entity ID', 'Asset Type', 'Threat Status']], 
+        body: tableData, 
+        theme: 'grid',
+        headStyles: { fillColor: [211, 47, 47] }, // Make the header red to match the brand!
+        styles: { fontSize: 8 }
     });
 
     // 5. Footer
