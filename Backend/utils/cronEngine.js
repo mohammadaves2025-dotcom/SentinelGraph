@@ -5,8 +5,8 @@ import axios from 'axios';
 export const startLivePulse = (io) => {
     console.log("⏱️ Live Pulse Engine armed. Autonomous patrols starting...");
 
-    // This runs every 30 seconds (represented by '*/30 * * * * *')
-    cron.schedule('*/30 * * * * *', async () => {
+    // This runs every 2 minute (represented by '0 */2 * * * *' in cron syntax)
+    cron.schedule('0 */2 * * * *', async () => {
         try {
             console.log("🔍 [AUTONOMOUS PATROL] Scanning graph for anomalies...");
             
