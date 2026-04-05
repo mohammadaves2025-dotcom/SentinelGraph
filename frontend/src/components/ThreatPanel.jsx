@@ -80,7 +80,9 @@ const ThreatPanel = ({ rawReport }) => {
                 </span>
                 <div className="flex-1 overflow-y-auto custom-scrollbar text-[11px] leading-relaxed text-slate-300 pr-2 pb-2">
                     {rawReport}
+
                 </div>
+                
             </div>
         </div>
     );
