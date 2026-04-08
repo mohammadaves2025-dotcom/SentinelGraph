@@ -1,24 +1,28 @@
 import React, { useMemo } from 'react';
 import { BrainCircuit, ShieldAlert, Target } from 'lucide-react';
 
-const ThreatPanel = ({ rawReport }) => {
+// 🚨 CHANGED: Accept graphData as a prop
+const ThreatPanel = ({ rawReport, graphData }) => {
+
+    // 🚨 ADDED: Check if there are any active fraud nodes in the current graph state
+    const hasActiveThreats = useMemo(() => {
+        if (!graphData || !graphData.nodes) return false;
+        return graphData.nodes.some(node => node.isFraud);
+    }, [graphData]);
 
     // --- THE AI PARSER ENGINE ---
-    // We analyze the raw Gemini text to extract structured financial intelligence
     const intel = useMemo(() => {
         if (!rawReport) return null;
 
         const lowerReport = rawReport.toLowerCase();
 
-        // 1. Calculate Confidence Score based on keyword density from the AI
-        let score = 45; // Base score just for getting flagged
+        let score = 45;
         if (lowerReport.includes("fraud")) score += 20;
         if (lowerReport.includes("high risk") || lowerReport.includes("critical")) score += 20;
         if (lowerReport.includes("money laundering")) score += 10;
         if (lowerReport.includes("quarantine") || lowerReport.includes("freeze")) score += 4;
-        const confidenceScore = Math.min(score, 99); // Max out at 99%
+        const confidenceScore = Math.min(score, 99);
 
-        // 2. Extract AML Typology Tags automatically
         const tags = [];
         if (lowerReport.includes("smurf") || lowerReport.includes("small transaction")) tags.push("SMURFING");
         if (lowerReport.includes("ring") || lowerReport.includes("circular")) tags.push("CIRCULAR ROUTING");
@@ -28,16 +32,22 @@ const ThreatPanel = ({ rawReport }) => {
         return { confidenceScore, tags };
     }, [rawReport]);
 
-    // If there is no report yet, show the Standby screen
-    if (!intel) {
+    // 🚨 CHANGED: Intercept the render. If no report OR no active threats, show the Green Secure Screen.
+    if (!intel || !hasActiveThreats) {
         return (
-            <div className="h-full flex flex-col items-center justify-center text-slate-500 font-mono text-[10px] tracking-widest text-center">
-                <BrainCircuit className="w-8 h-8 mb-4 opacity-50" />
-                {">> SYSTEM SECURE."}<br />{">> WAITING FOR DATA INGESTION..."}
+            <div className="h-full flex flex-col items-center justify-center text-slate-500 font-mono text-[10px] tracking-widest text-center border border-green-500/10 bg-green-950/10 rounded-sm p-4">
+                <div className="text-green-500 text-lg mb-4 font-bold flex items-center gap-2 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    SYSTEM SECURE
+                </div>
+                <BrainCircuit className="w-8 h-8 mb-4 opacity-50 text-green-600" />
+                <span className="text-green-600/70">{">> BASELINE TOPOLOGY NORMAL."}</span>
+                <span className="text-green-600/70">{">> NO GDS ANOMALIES DETECTED."}</span>
             </div>
         );
     }
 
+    // If there ARE threats, render the Gemini Analysis as normal
     const isCritical = intel.confidenceScore > 75;
 
     return (

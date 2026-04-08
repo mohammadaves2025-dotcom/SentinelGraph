@@ -48,23 +48,23 @@ function App() {
   // --- LOGIC UPGRADE: Live Visual Quarantine ---
   const handleNodeQuarantine = (nodeId) => {
     setGraphData(prevData => {
-        if (!prevData) return prevData;
-        
-        // Find the quarantined node and change its status to 'isQuarantined'
-        return {
-            ...prevData,
-            nodes: prevData.nodes.map(n => 
-                n.id === nodeId ? { ...n, isFraud: false, isQuarantined: true } : n
-            )
-        };
+      if (!prevData) return prevData;
+
+      // Find the quarantined node and change its status to 'isQuarantined'
+      return {
+        ...prevData,
+        nodes: prevData.nodes.map(n =>
+          n.id === nodeId ? { ...n, isFraud: false, isQuarantined: true } : n
+        )
+      };
     });
   };
 
   return (
     <>
-    {/* If not authenticated, lock them in the Boot Sequence! */}
+      {/* If not authenticated, lock them in the Boot Sequence! */}
       {!isAuthenticated && <BootSequence onAccessGranted={() => setIsAuthenticated(true)} />}
-      
+
       <div className="min-h-screen flex flex-col crt-flicker relative overflow-hidden bg-[#010409]">
 
         {/* DEFCON 1: Global Visual Sirens */}
@@ -95,27 +95,32 @@ function App() {
 
           <div className="col-span-6 h-full">
             <HUDPanel title={`Topology Matrix // ALG: ${activeAlgorithm}`} defcon={defcon}>
-              <GraphVisualizer 
-                 data={graphData} 
-                 onNodeSelect={setSelectedEntity} 
-                 isPredictiveMode={isPredictiveMode} // 👈 Pass it here!
-             />
+              <GraphVisualizer
+                data={graphData}
+                onNodeSelect={setSelectedEntity}
+                isPredictiveMode={isPredictiveMode} // 👈 Pass it here!
+              />
             </HUDPanel>
           </div>
 
           <div className="col-span-3 h-full">
-            <HUDPanel title="Gemini Threat Analysis" color={aiReport ? "red" : "cyan"} defcon={defcon}>
-              {/* Pass the aiReport state down into our new component! */}
-              <ThreatPanel rawReport={aiReport} />
+            {/* 🚨 CHANGED: The HUD border color now reacts to the actual graph data, not just the report text */}
+            <HUDPanel
+              title="Gemini Threat Analysis"
+              color={graphData?.nodes?.some(n => n.isFraud) ? "red" : "cyan"}
+              defcon={defcon}
+            >
+              {/* 🚨 CHANGED: Pass graphData as a prop */}
+              <ThreatPanel rawReport={aiReport} graphData={graphData} />
             </HUDPanel>
           </div>
 
         </div>
 
-        <EntityDashboard 
-            node={selectedEntity} 
-            onClose={() => setSelectedEntity(null)} 
-            onQuarantine={handleNodeQuarantine}
+        <EntityDashboard
+          node={selectedEntity}
+          onClose={() => setSelectedEntity(null)}
+          onQuarantine={handleNodeQuarantine}
         />
         <ThreatLedger isOpen={isLedgerOpen} onClose={() => setIsLedgerOpen(false)} data={graphData} />
       </div>
